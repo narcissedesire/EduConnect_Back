@@ -1,0 +1,348 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = []
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role{
+  admin
+  etudiant
+  enseignant
+}
+
+model Utilisateur {
+  id              String           @id @default(uuid())
+  nom             String
+  prenom          String?
+  age             Int?
+  email           String           @unique
+  mot_passe       String
+  role            Role             @default(etudiant)
+  validation      Boolean?         @default(false)
+  id_photo        String?
+  enseignant      Enseignant?
+  etudiant        Etudiant?
+  administrateur  Administrateur?
+  commentaires    Commentaire[]
+  reponsesComment ReponseComment[]
+  avis            Avis[]
+  notifications   Notification[]
+  temoignages     Temoignage[]
+  sessions        Session[]
+  messages        MessageGroupe[]
+  photo           Photo?           @relation(fields: [id_photo], references: [id], onDelete: Cascade)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+}
+
+model Photo {
+  id           String        @id @default(uuid())
+  nom          String
+  contenu      String?
+  isActif      Boolean        @default(true)
+  utilisateurs Utilisateur[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model Enseignant {
+  id             String      @id @default(uuid())
+  specialite     String?
+  matricule      String?      @unique
+  id_utilisateur String      @unique
+  utilisateur    Utilisateur @relation(fields: [id_utilisateur], references: [id], onDelete: Cascade)
+  cours          Cours[]
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+}
+
+model Niveau{
+  id          String   @id @default(uuid())
+  label       String
+  description String?  @db.Text
+  etudiant    Etudiant[]
+  cours       Cours[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Etudiant {
+  id             String      @id @default(uuid())
+  matricule      String?     @unique
+  id_utilisateur String      @unique
+  id_niveau      String?
+  utilisateur    Utilisateur @relation(fields: [id_utilisateur], references: [id], onDelete: Cascade)
+  niveau         Niveau?      @relation(fields: [id_niveau], references: [id], onDelete: Cascade)
+  inscriptions   Inscrire[]
+  resultats      Resultat[]
+  noteCours      NoteCours[]
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+}
+
+model Administrateur {
+  id             String      @id @default(uuid())
+  id_utilisateur String      @unique
+  utilisateur    Utilisateur @relation(fields: [id_utilisateur], references: [id], onDelete: Cascade)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+}
+
+model Categorie {
+  id          String   @id @default(uuid())
+  label       String
+  description String?  @db.Text
+  cours       Cours[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Cours {
+  id            String       @id @default(uuid())
+  titre         String
+  description   String      @db.Text
+  id_enseignant String
+  id_categorie  String
+  isGratuit     Boolean      @default(false)
+  isCertifier   Boolean      @default(false)
+  id_niveau     String?
+  niveau        Niveau?      @relation(fields: [id_niveau], references: [id], onDelete: Cascade)
+  enseignant    Enseignant   @relation(fields: [id_enseignant], references: [id], onDelete: Cascade)
+  categorie     Categorie    @relation(fields: [id_categorie], references: [id], onDelete: Cascade)
+  modules       Module[]
+  devoirs       Devoir[]
+  evaluations   Evaluation[]
+  avis          Avis[]
+  inscriptions  Inscrire[]
+  noteCours     NoteCours[]
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+}
+
+model NoteCours {
+  id          String    @id @default(uuid())
+  note        Int
+  id_etudiant String
+  id_cours    String
+  etudiant    Etudiant   @relation(fields: [id_etudiant], references: [id], onDelete: Cascade)
+  cours       Cours      @relation(fields: [id_cours], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Module {
+  id        String    @id @default(uuid())
+  nom       String
+  description String? @db.Text
+  dure      Int?
+  id_cours  String
+  isTermine Boolean   @default(false)
+  cours     Cours     @relation(fields: [id_cours], references: [id], onDelete: Cascade)
+  videos    Video[]
+  fichiers  Fichier[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Video {
+  id           String        @id @default(uuid())
+  nom          String
+  contenu      String
+  description  String?       @db.Text
+  id_module    String
+  module       Module        @relation(fields: [id_module], references: [id], onDelete: Cascade)
+  commentaires Commentaire[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model Fichier {
+  id          String   @id @default(uuid())
+  nom         String
+  contenu     String
+  description String   @db.Text
+  id_module   String
+  module      Module   @relation(fields: [id_module], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Commentaire {
+  id             String           @id @default(uuid())
+  text           String           @db.Text
+  id_video       String
+  id_utilisateur String
+  video          Video            @relation(fields: [id_video], references: [id], onDelete: Cascade)
+  utilisateur    Utilisateur      @relation(fields: [id_utilisateur], references: [id], onDelete: Cascade)
+  reponses       ReponseComment[]
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+}
+
+model ReponseComment {
+  id             String      @id @default(uuid())
+  text           String      @db.Text
+  id_comment     String
+  id_utilisateur String
+  commentaire    Commentaire @relation(fields: [id_comment], references: [id], onDelete: Cascade)
+  utilisateur    Utilisateur @relation(fields: [id_utilisateur], references: [id], onDelete: Cascade)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+}
+
+model Devoir {
+  id          String   @id @default(uuid())
+  titre       String
+  type        String
+  text        String   @db.Text
+  date_limite DateTime?
+  id_cours    String
+  cours       Cours    @relation(fields: [id_cours], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Inscrire {
+  id          String   @id @default(uuid())
+  id_etudiant String
+  id_cours    String
+  etudiant    Etudiant @relation(fields: [id_etudiant], references: [id], onDelete: Cascade)
+  cours       Cours    @relation(fields: [id_cours], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Evaluation {
+  id          String   @id @default(uuid())
+  titre       String
+  type        String
+  date_limite DateTime
+  id_cours    String
+  cours       Cours    @relation(fields: [id_cours], references: [id], onDelete: Cascade)
+  quizzes     Quiz[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Quiz {
+  id            String     @id @default(uuid())
+  titre         String
+  description   String     @db.Text
+  id_evaluation String
+  evaluation    Evaluation @relation(fields: [id_evaluation], references: [id], onDelete: Cascade)
+  questions     Question[]
+  resultats     Resultat[]
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+}
+
+model Question {
+  id        String     @id @default(uuid())
+  text      String     @db.Text
+  id_quiz   String
+  quiz      Quiz       @relation(fields: [id_quiz], references: [id], onDelete: Cascade)
+  options   Option[]
+  resultat  Resultat[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model Option {
+  id          String   @id @default(uuid())
+  text        String   @db.Text
+  isCorrect   Boolean  @default(false)
+  id_question String
+  question    Question @relation(fields: [id_question], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Resultat {
+  id          String   @id @default(uuid())
+  id_quiz     String
+  id_question String
+  id_etudiant String
+  isCorrect   Boolean  @default(true)
+  quiz        Quiz     @relation(fields: [id_quiz], references: [id], onDelete: Cascade)
+  question    Question @relation(fields: [id_question], references: [id], onDelete: Cascade)
+  etudiant    Etudiant @relation(fields: [id_etudiant], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Avis {
+  id             String      @id @default(uuid())
+  text           String      @db.Text
+  isAnonyme      Boolean     @default(false)
+  id_utilisateur String
+  id_cours       String
+  utilisateur    Utilisateur @relation(fields: [id_utilisateur], references: [id], onDelete: Cascade)
+  cours          Cours       @relation(fields: [id_cours], references: [id], onDelete: Cascade)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+}
+
+model GroupeMessage {
+  id          String          @id @default(uuid())
+  nom         String
+  description String          @db.Text
+  messages    MessageGroupe[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+model MessageGroupe {
+  id             String        @id @default(uuid())
+  id_groupe      String
+  id_utilisateur String
+  groupe         GroupeMessage @relation(fields: [id_groupe], references: [id], onDelete: Cascade)
+  utilisateur    Utilisateur   @relation(fields: [id_utilisateur], references: [id], onDelete: Cascade)
+  message        Message[]
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+}
+
+model Message {
+  id          String        @id @default(uuid())
+  text        String        @db.Text
+  id_membre   String
+  isVisible   Boolean       @default(true)
+  isImportant Boolean       @default(false)
+  membre      MessageGroupe @relation(fields: [id_membre], references: [id], onDelete: Cascade)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model Notification {
+  id             String      @id @default(uuid())
+  text           String      @db.Text
+  id_utilisateur String
+  utilisateur    Utilisateur @relation(fields: [id_utilisateur], references: [id], onDelete: Cascade)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+}
+
+model Temoignage {
+  id             String      @id @default(uuid())
+  text           String      @db.Text
+  isAnonyme      Boolean     @default(false)
+  id_utilisateur String
+  utilisateur    Utilisateur @relation(fields: [id_utilisateur], references: [id], onDelete: Cascade)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+}
+
+model Session {
+  id                String      @id @default(uuid())
+  token             String      @db.Text
+  isValide          Boolean     @default(true)
+  id_utilisateur    String
+  utilisateur       Utilisateur @relation(fields: [id_utilisateur], references: [id], onDelete: Cascade)
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime?   @updatedAt
+  expiresAt         DateTime?
+}
