@@ -12,20 +12,20 @@ export const dataRegister = z.object({
   email: z.string().email("Adresse e-mail invalide"),
   mot_passe: z
     .string()
-    .min(8, "Le mot de passe doit comporter au moins 8 caractères")
-    .regex(
-      /[A-Z]/,
-      "Le mot de passe doit contenir au moins une lettre majuscule"
-    )
-    .regex(
-      /[a-z]/,
-      "Le mot de passe doit contenir au moins une lettre minuscule"
-    )
-    .regex(/[0-9]/, "Le mot de passe doit contenir au moins un chiffre")
-    .regex(
-      /[@$!%*?&]/,
-      "Le mot de passe doit contenir au moins un caractère spécial (@, $, !, %, *, ?, & par exemple)"
-    ),
+    .min(8, "Le mot de passe doit comporter au moins 8 caractères"),
+  // .regex(
+  //   /[A-Z]/,
+  //   "Le mot de passe doit contenir au moins une lettre majuscule"
+  // )
+  // .regex(
+  //   /[a-z]/,
+  //   "Le mot de passe doit contenir au moins une lettre minuscule"
+  // )
+  // .regex(/[0-9]/, "Le mot de passe doit contenir au moins un chiffre")
+  // .regex(
+  //   /[@$!%*?&]/,
+  //   "Le mot de passe doit contenir au moins un caractère spécial (@, $, !, %, *, ?, & par exemple)"
+  // ),
   role: z.enum(["etudiant", "enseignant", "administrateur"], "Rôle invalide"),
 });
 

@@ -24,7 +24,6 @@ export const register = async (req, res) => {
 
     const hashedPassword = await hash(mot_passe, 10);
 
-    // Création de l'utilisateur
     user = await prismaClient.utilisateur.create({
       data: {
         nom,
@@ -65,7 +64,6 @@ export const login = async (req, res) => {
       throw Error("Mot de passe incorrect");
     }
 
-    // Vérifier s'il existe une session valide pour cet utilisateur
     const existingSession = await prismaClient.session.findFirst({
       where: {
         id_utilisateur: user.id,
@@ -74,7 +72,6 @@ export const login = async (req, res) => {
     });
 
     if (existingSession) {
-      // Si une session valide existe déjà, renvoyez le jeton existant
       return res.json({
         user,
         token: existingSession.token,
@@ -83,15 +80,12 @@ export const login = async (req, res) => {
       });
     }
 
-    // Générer un nouveau jeton si la session n'est pas valide
     const token = jwt.sign({ user }, process.env.JWT_SECRET, {
       expiresIn: "12h",
     });
 
-    // Créer une session avec le nouveau jeton
     await createSession(token, user.id);
 
-    // Répondre au frontend avec les informations nécessaires
     res.json({
       user,
       token,
@@ -105,7 +99,7 @@ export const login = async (req, res) => {
 
 export const Profile = async (req, res) => {
   try {
-    const { id, role } = req.user; // Assurez-vous que req.user est correctement structuré
+    const { id, role } = req.user;
     let userProfile;
 
     if (role === "etudiant") {
@@ -151,15 +145,3 @@ export const logout = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-
-// export const forgotPassword = (req, res) => {
-//   res.send("Forgot Password");
-// };
-
-// export const resetPassword = (req, res) => {
-//   res.send("Reset Password");
-// };
-
-// export const updateProfile = (req, res) => {
-//   res.send("Update Profile");
-// };

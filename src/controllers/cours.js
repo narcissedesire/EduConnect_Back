@@ -1,41 +1,70 @@
 import { prismaClient } from "../../prisma/prismaClient.js";
-import { validateData } from "../utils/fonctionValidation.js";
-import {
-  createFilterCondition,
-  createPaginationResponse,
-  getCoursWithPagination,
-  getPaginationParams,
-} from "../utils/fonction_pagination_filter_cours.js";
-import { dataCours } from "../utils/validation.js";
-import { readEnseignat } from "./enseignant.js";
-import { createModule, updateModule } from "./module.js";
 
 export const clientCours = async (req, res) => {
   try {
-    // 1. Récupérer les paramètres
-    const { currentPage, pageSize, skip, titre } = getPaginationParams(
-      req.query
-    );
+    const { page = 1, pageSize = 10 } = req.query;
+    const skip = (page - 1) * pageSize;
 
-    // 2. Créer la condition de filtre
-    const filterCondition = createFilterCondition(titre);
+    const filterCondition = {};
 
-    // 3. Récupérer les cours avec pagination et filtre
-    const { cours, totalCours } = await getCoursWithPagination(
-      filterCondition,
-      skip,
-      pageSize
-    );
+    const cours = await prismaClient.cours.findMany({
+      where: filterCondition,
+      skip: parseInt(skip),
+      take: parseInt(pageSize),
+      include: {
+        modules: true,
+        niveau: true,
+        categorie: true,
+      },
+      // orderBy: {
+      //   createdAt: "desc",
+      // },
+    });
 
-    // 4. Créer la réponse de pagination
-    const response = createPaginationResponse(
+    if (!cours || cours.length === 0) {
+      return res.status(404).json({
+        message: "Aucun cours trouvé",
+        status: "error",
+      });
+    }
+
+    res.json({
       cours,
-      totalCours,
-      currentPage,
-      pageSize
-    );
+      message: "Récupération du cours réussie",
+      status: "success",
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
 
-    res.json(response);
+export const coursEnseignatId = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const cours = await prismaClient.enseignant.findMany({
+      where: { id_utilisateur: id },
+      include: {
+        cours: {
+          include: {
+            categorie: true,
+            modules: true,
+          },
+        },
+      },
+    });
+
+    if (cours.length > 0 && cours[0].cours.length > 0) {
+      cours[0].cours.sort(
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+      );
+    }
+
+    res.json({
+      cours,
+      message: "Récupération du cours réussie",
+      status: "success",
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -45,7 +74,6 @@ export const datailCours = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Récupération du cours avec les relations imbriquées
     const cours = await prismaClient.cours.findUnique({
       where: { id },
       include: {
@@ -55,7 +83,7 @@ export const datailCours = async (req, res) => {
               include: {
                 commentaires: {
                   include: {
-                    utilisateur: true, // Utilisateur ayant posté le commentaire
+                    utilisateur: true,
                     reponses: {
                       include: {
                         utilisateur: {
@@ -69,26 +97,26 @@ export const datailCours = async (req, res) => {
                 },
               },
             },
-            fichiers: true, // Fichiers liés au module
+            fichiers: true,
           },
         },
-        niveau: true, // Niveau du cours
-        categorie: true, // Catégorie du cours
+        niveau: true,
+        categorie: true,
         avis: {
           include: {
-            utilisateur: true, // Utilisateur ayant donné l'avis
+            utilisateur: true,
           },
         },
         enseignant: {
           include: {
-            utilisateur: true, // Détails de l'enseignant
+            utilisateur: true,
           },
         },
         inscriptions: {
           include: {
             etudiant: {
               include: {
-                utilisateur: true, // Détails de l'utilisateur étudiant
+                utilisateur: true,
               },
             },
           },
@@ -96,19 +124,17 @@ export const datailCours = async (req, res) => {
       },
     });
 
-    // Vérification si le cours existe
     if (!cours) {
       return res.status(404).json({ error: "Cours non trouvé" });
     }
 
-    // Retour du cours et de ses relations
     res.json({
       cours,
       message: "Récupération du cours réussie",
       status: "success",
     });
   } catch (error) {
-    console.error(error); // Journalisation des erreurs
+    console.error(error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -116,34 +142,26 @@ export const datailCours = async (req, res) => {
 export const createCours = async (req, res) => {
   try {
     console.log("Requête reçue : ", req.body);
-    const { titre, description, id_categorie, id_enseignant, modules } =
-      req.body;
+    const { titre, description, categorieId, id_utilisateur } = req.body;
 
-    console.log("description : ", description);
-
-    // Vérifiez que l'ID de l'enseignant et de la catégorie sont bien définis
-    if (!id_enseignant || !id_categorie) {
-      throw new Error("L'ID de l'enseignant et de la catégorie sont requis");
+    if (!id_utilisateur) {
+      res.status(404).json({ message: "L'ID de l'utilisateur est requis" });
     }
 
-    // Créez le cours avec les modules associés, l'enseignant et la catégorie
+    const enseignant = await prismaClient.enseignant.findFirst({
+      where: { id_utilisateur },
+    });
+    console.log(enseignant.id);
+
     const cours = await prismaClient.cours.create({
       data: {
         titre,
         description,
-        enseignant: {
-          connect: { id: id_enseignant },
-        },
-        categorie: {
-          connect: { id: id_categorie },
-        },
-        modules: {
-          create: createModule(modules),
-        },
+        id_enseignant: enseignant.id,
+        id_categorie: categorieId,
       },
     });
 
-    // Réponse en cas de succès
     res.json({
       cours,
       message:
@@ -151,19 +169,18 @@ export const createCours = async (req, res) => {
       status: "success",
     });
   } catch (error) {
-    // Gestion des erreurs
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ message: error.message });
   }
 };
 
 export const updateCours = async (req, res) => {
   try {
     const { id } = req.params;
-    const { titre, description, id_enseignant, id_categorie, modules } =
-      validateData(req.body, dataCours);
+    const { titre, description, categorieId } = req.body;
+    console.log(req.body);
 
     if (!id) {
-      throw Error("Identifiant non trouvé");
+      res.status(404).json({ message: "Identifiant non trouvé" });
     }
 
     const cours = await prismaClient.cours.update({
@@ -171,20 +188,9 @@ export const updateCours = async (req, res) => {
       data: {
         titre,
         description,
-        enseignant: {
-          connect: { id: id_enseignant },
-        },
-        categorie: {
-          connect: { id: id_categorie },
-        },
-        modules: {
-          create: createModule(modules),
-        },
+        id_categorie: categorieId,
       },
     });
-
-    // Mettre à jour les modules, vidéos et fichiers
-    await updateModule(prismaClient, modules, id);
 
     res.json({
       cours,
@@ -192,7 +198,7 @@ export const updateCours = async (req, res) => {
       status: "success",
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ message: error.message });
   }
 };
 

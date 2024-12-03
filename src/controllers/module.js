@@ -1,8 +1,4 @@
 import { prismaClient } from "../../prisma/prismaClient.js";
-import { validateData } from "../utils/fonctionValidation.js";
-import { dataModule } from "../utils/validation.js";
-import { createFichiers, updateFichiers } from "./fichierPDF.js";
-import { createVideos, updateVideos } from "./video.js";
 
 export const readModule = async (req, res) => {
   try {
@@ -19,9 +15,9 @@ export const readModule = async (req, res) => {
 
 export const readModuleCours = async (req, res) => {
   try {
-    const { id_cours } = req.params;
+    const { id } = req.params;
     const modules = await prismaClient.module.findMany({
-      where: { id_cours },
+      where: { id_cours: id },
     });
     res.json({
       modules,
@@ -33,57 +29,64 @@ export const readModuleCours = async (req, res) => {
   }
 };
 
-export const createModule = (modules) => {
+export const readDetailModule = async (req, res) => {
   try {
-    return modules.map((module) => ({
-      nom: module.nom,
-      description: module.description,
-      dure: module.dure,
-      videos: {
-        create: createVideos(module.videos),
+    const { id } = req.params;
+    const module = await prismaClient.module.findFirst({
+      where: { id },
+      include: {
+        videos: true,
+        fichiers: true,
       },
-      fichiers: {
-        create: createFichiers(module.fichiers),
-      },
-    }));
+    });
+    res.json({
+      module,
+      message: "Module récupéré",
+      status: "success",
+    });
   } catch (error) {
-    throw new Error(error);
+    res.status(500).json({ error: error.message });
   }
 };
 
-export const updateModule = async (prismaClient, modules, coursId) => {
-  for (const module of modules) {
-    if (module.id) {
-      // Mettre à jour le module existant
-      await prismaClient.module.update({
-        where: { id: module.id },
-        data: {
-          nom: module.nom,
-          description: module.description,
-          dure: module.dure,
-        },
-      });
+export const createModule = async (req, res) => {
+  const { nom, description, id_cours } = req.body;
+  try {
+    const module = await prismaClient.module.create({
+      data: {
+        nom,
+        description,
+        id_cours,
+      },
+    });
+    res.json({
+      module,
+      message: "Module créé",
+      status: "success",
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
 
-      // Mettre à jour les vidéos et les fichiers associés
-      await updateVideos(prismaClient, module.videos, module.id);
-      await updateFichiers(prismaClient, module.fichiers, module.id);
-    } else {
-      // Créer un nouveau module
-      const newModule = await prismaClient.module.create({
-        data: {
-          nom: module.nom,
-          description: module.description,
-          dure: module.dure,
-          coursId: coursId,
-          videos: {
-            create: module.videos,
-          },
-          fichiers: {
-            create: module.fichiers,
-          },
-        },
-      });
-    }
+export const updateModule = async (req, res) => {
+  const { nom, description } = req.body;
+  const { id } = req.params;
+  try {
+    const module = await prismaClient.module.update({
+      where: { id },
+      data: {
+        nom,
+        description,
+      },
+    });
+    res.json({
+      module,
+      message: "Module modifié",
+      status: "success",
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 };
 

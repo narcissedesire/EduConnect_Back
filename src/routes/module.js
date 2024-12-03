@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
   createModule,
   deleteModule,
+  readDetailModule,
   readModule,
   readModuleCours,
   updateModule,
@@ -12,19 +13,20 @@ import { enseignantMiddleware } from "../middleware/enseignantMiddleware.js";
 export const moduleRoutes = Router();
 
 moduleRoutes.get("/", readModule);
-moduleRoutes.get("/cours", readModuleCours);
+moduleRoutes.get("/cours/:id", readModuleCours);
+moduleRoutes.get("/detailModule/:id", readDetailModule);
 moduleRoutes.post(
   "/create",
-  [authMiddleware, enseignantMiddleware],
+  // [authMiddleware, enseignantMiddleware],
   createModule
 );
 moduleRoutes.put(
   "/update/:id",
-  [authMiddleware, enseignantMiddleware],
+  // [authMiddleware, enseignantMiddleware],
   updateModule
 );
 moduleRoutes.delete(
   "/delete/:id",
-  [authMiddleware, enseignantMiddleware],
+  // [authMiddleware, enseignantMiddleware],
   deleteModule
 );
