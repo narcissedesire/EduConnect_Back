@@ -8,3 +8,4 @@ DATABASE_URL="mysql://root:@localhost:3306/edu_connect"
 PORT = 5000
 NODE_ENV = "development"
 JWT_SECRET = sdfvG2d4e7g65hrt7§H2gk&hgv
+
