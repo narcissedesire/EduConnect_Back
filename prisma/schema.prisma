@@ -6,6 +6,7 @@ generator client {
 datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
 }
 
 enum Role{
@@ -44,9 +45,9 @@ model Utilisateur {
 model Photo {
   id           String        @id @default(uuid())
   nom          String
-  contenu      String?
   isActif      Boolean        @default(true)
   utilisateurs Utilisateur[]
+  cours        Cours[]
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 }
@@ -109,12 +110,14 @@ model Cours {
   description   String      @db.Text
   id_enseignant String
   id_categorie  String
+  id_photo      String?
   isGratuit     Boolean      @default(false)
   isCertifier   Boolean      @default(false)
   id_niveau     String?
   niveau        Niveau?      @relation(fields: [id_niveau], references: [id], onDelete: Cascade)
   enseignant    Enseignant   @relation(fields: [id_enseignant], references: [id], onDelete: Cascade)
   categorie     Categorie    @relation(fields: [id_categorie], references: [id], onDelete: Cascade)
+  photo         Photo?       @relation(fields: [id_photo], references: [id], onDelete: Cascade)
   modules       Module[]
   devoirs       Devoir[]
   evaluations   Evaluation[]
@@ -224,28 +227,19 @@ model Evaluation {
   date_limite DateTime
   id_cours    String
   cours       Cours    @relation(fields: [id_cours], references: [id], onDelete: Cascade)
-  quizzes     Quiz[]
+  question    Question[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-}
-
-model Quiz {
-  id            String     @id @default(uuid())
-  titre         String
-  description   String     @db.Text
-  id_evaluation String
-  evaluation    Evaluation @relation(fields: [id_evaluation], references: [id], onDelete: Cascade)
-  questions     Question[]
-  resultats     Resultat[]
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
 }
 
 model Question {
   id        String     @id @default(uuid())
   text      String     @db.Text
-  id_quiz   String
-  quiz      Quiz       @relation(fields: [id_quiz], references: [id], onDelete: Cascade)
+  score     Int
+  type      String
+  correctAnswer String
+  id_evaluation String
+  evaluation Evaluation @relation(fields: [id_evaluation], references: [id], onDelete: Cascade)
   options   Option[]
   resultat  Resultat[]
   createdAt DateTime   @default(now())
@@ -264,11 +258,9 @@ model Option {
 
 model Resultat {
   id          String   @id @default(uuid())
-  id_quiz     String
   id_question String
   id_etudiant String
   isCorrect   Boolean  @default(true)
-  quiz        Quiz     @relation(fields: [id_quiz], references: [id], onDelete: Cascade)
   question    Question @relation(fields: [id_question], references: [id], onDelete: Cascade)
   etudiant    Etudiant @relation(fields: [id_etudiant], references: [id], onDelete: Cascade)
   createdAt   DateTime @default(now())

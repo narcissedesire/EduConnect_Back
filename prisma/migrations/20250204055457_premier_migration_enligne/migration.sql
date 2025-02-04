@@ -6,8 +6,8 @@ CREATE TABLE `Utilisateur` (
     `age` INTEGER NULL,
     `email` VARCHAR(191) NOT NULL,
     `mot_passe` VARCHAR(191) NOT NULL,
-    `role` VARCHAR(191) NOT NULL,
-    `validation` BOOLEAN NOT NULL DEFAULT false,
+    `role` ENUM('admin', 'etudiant', 'enseignant') NOT NULL DEFAULT 'etudiant',
+    `validation` BOOLEAN NULL DEFAULT false,
     `id_photo` VARCHAR(191) NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
@@ -20,7 +20,7 @@ CREATE TABLE `Utilisateur` (
 CREATE TABLE `Photo` (
     `id` VARCHAR(191) NOT NULL,
     `nom` VARCHAR(191) NOT NULL,
-    `contenu` VARCHAR(191) NULL,
+    `isActif` BOOLEAN NOT NULL DEFAULT true,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
@@ -31,7 +31,7 @@ CREATE TABLE `Photo` (
 CREATE TABLE `Enseignant` (
     `id` VARCHAR(191) NOT NULL,
     `specialite` VARCHAR(191) NULL,
-    `matricule` VARCHAR(191) NOT NULL,
+    `matricule` VARCHAR(191) NULL,
     `id_utilisateur` VARCHAR(191) NOT NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
@@ -42,11 +42,22 @@ CREATE TABLE `Enseignant` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
+CREATE TABLE `Niveau` (
+    `id` VARCHAR(191) NOT NULL,
+    `label` VARCHAR(191) NOT NULL,
+    `description` TEXT NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
 CREATE TABLE `Etudiant` (
     `id` VARCHAR(191) NOT NULL,
-    `matricule` VARCHAR(191) NOT NULL,
-    `niveau` VARCHAR(191) NOT NULL,
+    `matricule` VARCHAR(191) NULL,
     `id_utilisateur` VARCHAR(191) NOT NULL,
+    `id_niveau` VARCHAR(191) NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
@@ -70,7 +81,7 @@ CREATE TABLE `Administrateur` (
 CREATE TABLE `Categorie` (
     `id` VARCHAR(191) NOT NULL,
     `label` VARCHAR(191) NOT NULL,
-    `description` VARCHAR(191) NULL,
+    `description` TEXT NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
@@ -80,10 +91,26 @@ CREATE TABLE `Categorie` (
 -- CreateTable
 CREATE TABLE `Cours` (
     `id` VARCHAR(191) NOT NULL,
-    `nom` VARCHAR(191) NOT NULL,
-    `description` VARCHAR(191) NULL,
+    `titre` VARCHAR(191) NOT NULL,
+    `description` TEXT NOT NULL,
     `id_enseignant` VARCHAR(191) NOT NULL,
     `id_categorie` VARCHAR(191) NOT NULL,
+    `id_photo` VARCHAR(191) NULL,
+    `isGratuit` BOOLEAN NOT NULL DEFAULT false,
+    `isCertifier` BOOLEAN NOT NULL DEFAULT false,
+    `id_niveau` VARCHAR(191) NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `NoteCours` (
+    `id` VARCHAR(191) NOT NULL,
+    `note` INTEGER NOT NULL,
+    `id_etudiant` VARCHAR(191) NOT NULL,
+    `id_cours` VARCHAR(191) NOT NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
@@ -94,8 +121,9 @@ CREATE TABLE `Cours` (
 CREATE TABLE `Module` (
     `id` VARCHAR(191) NOT NULL,
     `nom` VARCHAR(191) NOT NULL,
-    `contenu` VARCHAR(191) NULL,
+    `description` TEXT NULL,
     `id_cours` VARCHAR(191) NOT NULL,
+    `isTermine` BOOLEAN NOT NULL DEFAULT false,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
@@ -106,8 +134,8 @@ CREATE TABLE `Module` (
 CREATE TABLE `Video` (
     `id` VARCHAR(191) NOT NULL,
     `nom` VARCHAR(191) NOT NULL,
-    `contenu` VARCHAR(191) NOT NULL,
-    `description` VARCHAR(191) NULL,
+    `liens` VARCHAR(191) NOT NULL,
+    `description` TEXT NULL,
     `id_module` VARCHAR(191) NOT NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
@@ -119,8 +147,8 @@ CREATE TABLE `Video` (
 CREATE TABLE `Fichier` (
     `id` VARCHAR(191) NOT NULL,
     `nom` VARCHAR(191) NOT NULL,
-    `contenu` VARCHAR(191) NOT NULL,
-    `description` VARCHAR(191) NOT NULL,
+    `liens` VARCHAR(191) NOT NULL,
+    `description` TEXT NOT NULL,
     `id_module` VARCHAR(191) NOT NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
@@ -131,7 +159,7 @@ CREATE TABLE `Fichier` (
 -- CreateTable
 CREATE TABLE `Commentaire` (
     `id` VARCHAR(191) NOT NULL,
-    `text` VARCHAR(191) NOT NULL,
+    `text` TEXT NOT NULL,
     `id_video` VARCHAR(191) NOT NULL,
     `id_utilisateur` VARCHAR(191) NOT NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
@@ -143,7 +171,7 @@ CREATE TABLE `Commentaire` (
 -- CreateTable
 CREATE TABLE `ReponseComment` (
     `id` VARCHAR(191) NOT NULL,
-    `text` VARCHAR(191) NOT NULL,
+    `text` TEXT NOT NULL,
     `id_comment` VARCHAR(191) NOT NULL,
     `id_utilisateur` VARCHAR(191) NOT NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
@@ -157,7 +185,7 @@ CREATE TABLE `Devoir` (
     `id` VARCHAR(191) NOT NULL,
     `titre` VARCHAR(191) NOT NULL,
     `type` VARCHAR(191) NOT NULL,
-    `contenu` VARCHAR(191) NOT NULL,
+    `text` TEXT NOT NULL,
     `date_limite` DATETIME(3) NULL,
     `id_cours` VARCHAR(191) NOT NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
@@ -191,22 +219,13 @@ CREATE TABLE `Evaluation` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `Quiz` (
-    `id` VARCHAR(191) NOT NULL,
-    `titre` VARCHAR(191) NOT NULL,
-    `description` VARCHAR(191) NOT NULL,
-    `id_evaluation` VARCHAR(191) NOT NULL,
-    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-    `updatedAt` DATETIME(3) NOT NULL,
-
-    PRIMARY KEY (`id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- CreateTable
 CREATE TABLE `Question` (
     `id` VARCHAR(191) NOT NULL,
-    `text` VARCHAR(191) NOT NULL,
-    `id_quiz` VARCHAR(191) NOT NULL,
+    `text` TEXT NOT NULL,
+    `score` INTEGER NOT NULL,
+    `type` VARCHAR(191) NOT NULL,
+    `correctAnswer` VARCHAR(191) NOT NULL,
+    `id_evaluation` VARCHAR(191) NOT NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
@@ -216,7 +235,7 @@ CREATE TABLE `Question` (
 -- CreateTable
 CREATE TABLE `Option` (
     `id` VARCHAR(191) NOT NULL,
-    `text` VARCHAR(191) NOT NULL,
+    `text` TEXT NOT NULL,
     `isCorrect` BOOLEAN NOT NULL DEFAULT false,
     `id_question` VARCHAR(191) NOT NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
@@ -228,7 +247,6 @@ CREATE TABLE `Option` (
 -- CreateTable
 CREATE TABLE `Resultat` (
     `id` VARCHAR(191) NOT NULL,
-    `id_quiz` VARCHAR(191) NOT NULL,
     `id_question` VARCHAR(191) NOT NULL,
     `id_etudiant` VARCHAR(191) NOT NULL,
     `isCorrect` BOOLEAN NOT NULL DEFAULT true,
@@ -241,7 +259,7 @@ CREATE TABLE `Resultat` (
 -- CreateTable
 CREATE TABLE `Avis` (
     `id` VARCHAR(191) NOT NULL,
-    `text` VARCHAR(191) NOT NULL,
+    `text` TEXT NOT NULL,
     `isAnonyme` BOOLEAN NOT NULL DEFAULT false,
     `id_utilisateur` VARCHAR(191) NOT NULL,
     `id_cours` VARCHAR(191) NOT NULL,
@@ -252,21 +270,10 @@ CREATE TABLE `Avis` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `GroupeMessage` (
+CREATE TABLE `Conversation` (
     `id` VARCHAR(191) NOT NULL,
-    `nom` VARCHAR(191) NOT NULL,
-    `description` VARCHAR(191) NOT NULL,
-    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-    `updatedAt` DATETIME(3) NOT NULL,
-
-    PRIMARY KEY (`id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- CreateTable
-CREATE TABLE `MessageGroupe` (
-    `id` VARCHAR(191) NOT NULL,
-    `id_groupe` VARCHAR(191) NOT NULL,
-    `id_utilisateur` VARCHAR(191) NOT NULL,
+    `id_sender` VARCHAR(191) NOT NULL,
+    `id_receiver` VARCHAR(191) NOT NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
@@ -276,12 +283,12 @@ CREATE TABLE `MessageGroupe` (
 -- CreateTable
 CREATE TABLE `Message` (
     `id` VARCHAR(191) NOT NULL,
-    `text` VARCHAR(191) NOT NULL,
-    `id_membre` VARCHAR(191) NOT NULL,
-    `isVisible` BOOLEAN NOT NULL DEFAULT true,
+    `text` TEXT NOT NULL,
+    `id_sender` VARCHAR(191) NOT NULL,
+    `id_conversation` VARCHAR(191) NOT NULL,
     `isImportant` BOOLEAN NOT NULL DEFAULT false,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-    `updatedAt` DATETIME(3) NOT NULL,
+    `updatedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -289,7 +296,7 @@ CREATE TABLE `Message` (
 -- CreateTable
 CREATE TABLE `Notification` (
     `id` VARCHAR(191) NOT NULL,
-    `text` VARCHAR(191) NOT NULL,
+    `text` TEXT NOT NULL,
     `id_utilisateur` VARCHAR(191) NOT NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
@@ -300,7 +307,7 @@ CREATE TABLE `Notification` (
 -- CreateTable
 CREATE TABLE `Temoignage` (
     `id` VARCHAR(191) NOT NULL,
-    `text` VARCHAR(191) NOT NULL,
+    `text` TEXT NOT NULL,
     `isAnonyme` BOOLEAN NOT NULL DEFAULT false,
     `id_utilisateur` VARCHAR(191) NOT NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
@@ -312,104 +319,117 @@ CREATE TABLE `Temoignage` (
 -- CreateTable
 CREATE TABLE `Session` (
     `id` VARCHAR(191) NOT NULL,
-    `heure_connexion` DATETIME(3) NOT NULL,
-    `heure_deconnexion` DATETIME(3) NULL,
+    `token` TEXT NOT NULL,
+    `isValide` BOOLEAN NOT NULL DEFAULT true,
     `id_utilisateur` VARCHAR(191) NOT NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-    `updatedAt` DATETIME(3) NOT NULL,
+    `updatedAt` DATETIME(3) NULL,
+    `expiresAt` DATETIME(3) NULL,
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- AddForeignKey
-ALTER TABLE `Utilisateur` ADD CONSTRAINT `Utilisateur_id_photo_fkey` FOREIGN KEY (`id_photo`) REFERENCES `Photo`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE `Utilisateur` ADD CONSTRAINT `Utilisateur_id_photo_fkey` FOREIGN KEY (`id_photo`) REFERENCES `Photo`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Enseignant` ADD CONSTRAINT `Enseignant_id_utilisateur_fkey` FOREIGN KEY (`id_utilisateur`) REFERENCES `Utilisateur`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `Enseignant` ADD CONSTRAINT `Enseignant_id_utilisateur_fkey` FOREIGN KEY (`id_utilisateur`) REFERENCES `Utilisateur`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Etudiant` ADD CONSTRAINT `Etudiant_id_utilisateur_fkey` FOREIGN KEY (`id_utilisateur`) REFERENCES `Utilisateur`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `Etudiant` ADD CONSTRAINT `Etudiant_id_utilisateur_fkey` FOREIGN KEY (`id_utilisateur`) REFERENCES `Utilisateur`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Administrateur` ADD CONSTRAINT `Administrateur_id_utilisateur_fkey` FOREIGN KEY (`id_utilisateur`) REFERENCES `Utilisateur`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `Etudiant` ADD CONSTRAINT `Etudiant_id_niveau_fkey` FOREIGN KEY (`id_niveau`) REFERENCES `Niveau`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Cours` ADD CONSTRAINT `Cours_id_enseignant_fkey` FOREIGN KEY (`id_enseignant`) REFERENCES `Enseignant`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `Administrateur` ADD CONSTRAINT `Administrateur_id_utilisateur_fkey` FOREIGN KEY (`id_utilisateur`) REFERENCES `Utilisateur`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Cours` ADD CONSTRAINT `Cours_id_categorie_fkey` FOREIGN KEY (`id_categorie`) REFERENCES `Categorie`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `Cours` ADD CONSTRAINT `Cours_id_niveau_fkey` FOREIGN KEY (`id_niveau`) REFERENCES `Niveau`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Module` ADD CONSTRAINT `Module_id_cours_fkey` FOREIGN KEY (`id_cours`) REFERENCES `Cours`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `Cours` ADD CONSTRAINT `Cours_id_enseignant_fkey` FOREIGN KEY (`id_enseignant`) REFERENCES `Enseignant`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Video` ADD CONSTRAINT `Video_id_module_fkey` FOREIGN KEY (`id_module`) REFERENCES `Module`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `Cours` ADD CONSTRAINT `Cours_id_categorie_fkey` FOREIGN KEY (`id_categorie`) REFERENCES `Categorie`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Fichier` ADD CONSTRAINT `Fichier_id_module_fkey` FOREIGN KEY (`id_module`) REFERENCES `Module`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `Cours` ADD CONSTRAINT `Cours_id_photo_fkey` FOREIGN KEY (`id_photo`) REFERENCES `Photo`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Commentaire` ADD CONSTRAINT `Commentaire_id_video_fkey` FOREIGN KEY (`id_video`) REFERENCES `Video`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `NoteCours` ADD CONSTRAINT `NoteCours_id_etudiant_fkey` FOREIGN KEY (`id_etudiant`) REFERENCES `Etudiant`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Commentaire` ADD CONSTRAINT `Commentaire_id_utilisateur_fkey` FOREIGN KEY (`id_utilisateur`) REFERENCES `Utilisateur`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `NoteCours` ADD CONSTRAINT `NoteCours_id_cours_fkey` FOREIGN KEY (`id_cours`) REFERENCES `Cours`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `ReponseComment` ADD CONSTRAINT `ReponseComment_id_comment_fkey` FOREIGN KEY (`id_comment`) REFERENCES `Commentaire`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `Module` ADD CONSTRAINT `Module_id_cours_fkey` FOREIGN KEY (`id_cours`) REFERENCES `Cours`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `ReponseComment` ADD CONSTRAINT `ReponseComment_id_utilisateur_fkey` FOREIGN KEY (`id_utilisateur`) REFERENCES `Utilisateur`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `Video` ADD CONSTRAINT `Video_id_module_fkey` FOREIGN KEY (`id_module`) REFERENCES `Module`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Devoir` ADD CONSTRAINT `Devoir_id_cours_fkey` FOREIGN KEY (`id_cours`) REFERENCES `Cours`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `Fichier` ADD CONSTRAINT `Fichier_id_module_fkey` FOREIGN KEY (`id_module`) REFERENCES `Module`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Inscrire` ADD CONSTRAINT `Inscrire_id_etudiant_fkey` FOREIGN KEY (`id_etudiant`) REFERENCES `Etudiant`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `Commentaire` ADD CONSTRAINT `Commentaire_id_video_fkey` FOREIGN KEY (`id_video`) REFERENCES `Video`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Inscrire` ADD CONSTRAINT `Inscrire_id_cours_fkey` FOREIGN KEY (`id_cours`) REFERENCES `Cours`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `Commentaire` ADD CONSTRAINT `Commentaire_id_utilisateur_fkey` FOREIGN KEY (`id_utilisateur`) REFERENCES `Utilisateur`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Evaluation` ADD CONSTRAINT `Evaluation_id_cours_fkey` FOREIGN KEY (`id_cours`) REFERENCES `Cours`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `ReponseComment` ADD CONSTRAINT `ReponseComment_id_comment_fkey` FOREIGN KEY (`id_comment`) REFERENCES `Commentaire`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Quiz` ADD CONSTRAINT `Quiz_id_evaluation_fkey` FOREIGN KEY (`id_evaluation`) REFERENCES `Evaluation`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `ReponseComment` ADD CONSTRAINT `ReponseComment_id_utilisateur_fkey` FOREIGN KEY (`id_utilisateur`) REFERENCES `Utilisateur`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Question` ADD CONSTRAINT `Question_id_quiz_fkey` FOREIGN KEY (`id_quiz`) REFERENCES `Quiz`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `Devoir` ADD CONSTRAINT `Devoir_id_cours_fkey` FOREIGN KEY (`id_cours`) REFERENCES `Cours`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Option` ADD CONSTRAINT `Option_id_question_fkey` FOREIGN KEY (`id_question`) REFERENCES `Question`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `Inscrire` ADD CONSTRAINT `Inscrire_id_etudiant_fkey` FOREIGN KEY (`id_etudiant`) REFERENCES `Etudiant`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Resultat` ADD CONSTRAINT `Resultat_id_quiz_fkey` FOREIGN KEY (`id_quiz`) REFERENCES `Quiz`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `Inscrire` ADD CONSTRAINT `Inscrire_id_cours_fkey` FOREIGN KEY (`id_cours`) REFERENCES `Cours`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Resultat` ADD CONSTRAINT `Resultat_id_question_fkey` FOREIGN KEY (`id_question`) REFERENCES `Question`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `Evaluation` ADD CONSTRAINT `Evaluation_id_cours_fkey` FOREIGN KEY (`id_cours`) REFERENCES `Cours`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Resultat` ADD CONSTRAINT `Resultat_id_etudiant_fkey` FOREIGN KEY (`id_etudiant`) REFERENCES `Etudiant`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `Question` ADD CONSTRAINT `Question_id_evaluation_fkey` FOREIGN KEY (`id_evaluation`) REFERENCES `Evaluation`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Avis` ADD CONSTRAINT `Avis_id_utilisateur_fkey` FOREIGN KEY (`id_utilisateur`) REFERENCES `Utilisateur`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `Option` ADD CONSTRAINT `Option_id_question_fkey` FOREIGN KEY (`id_question`) REFERENCES `Question`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Avis` ADD CONSTRAINT `Avis_id_cours_fkey` FOREIGN KEY (`id_cours`) REFERENCES `Cours`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `Resultat` ADD CONSTRAINT `Resultat_id_question_fkey` FOREIGN KEY (`id_question`) REFERENCES `Question`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `MessageGroupe` ADD CONSTRAINT `MessageGroupe_id_groupe_fkey` FOREIGN KEY (`id_groupe`) REFERENCES `GroupeMessage`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `Resultat` ADD CONSTRAINT `Resultat_id_etudiant_fkey` FOREIGN KEY (`id_etudiant`) REFERENCES `Etudiant`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `MessageGroupe` ADD CONSTRAINT `MessageGroupe_id_utilisateur_fkey` FOREIGN KEY (`id_utilisateur`) REFERENCES `Utilisateur`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `Avis` ADD CONSTRAINT `Avis_id_utilisateur_fkey` FOREIGN KEY (`id_utilisateur`) REFERENCES `Utilisateur`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Message` ADD CONSTRAINT `Message_id_membre_fkey` FOREIGN KEY (`id_membre`) REFERENCES `MessageGroupe`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `Avis` ADD CONSTRAINT `Avis_id_cours_fkey` FOREIGN KEY (`id_cours`) REFERENCES `Cours`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Notification` ADD CONSTRAINT `Notification_id_utilisateur_fkey` FOREIGN KEY (`id_utilisateur`) REFERENCES `Utilisateur`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `Conversation` ADD CONSTRAINT `Conversation_id_sender_fkey` FOREIGN KEY (`id_sender`) REFERENCES `Utilisateur`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Temoignage` ADD CONSTRAINT `Temoignage_id_utilisateur_fkey` FOREIGN KEY (`id_utilisateur`) REFERENCES `Utilisateur`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `Conversation` ADD CONSTRAINT `Conversation_id_receiver_fkey` FOREIGN KEY (`id_receiver`) REFERENCES `Utilisateur`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Session` ADD CONSTRAINT `Session_id_utilisateur_fkey` FOREIGN KEY (`id_utilisateur`) REFERENCES `Utilisateur`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `Message` ADD CONSTRAINT `Message_id_sender_fkey` FOREIGN KEY (`id_sender`) REFERENCES `Utilisateur`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Message` ADD CONSTRAINT `Message_id_conversation_fkey` FOREIGN KEY (`id_conversation`) REFERENCES `Conversation`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Notification` ADD CONSTRAINT `Notification_id_utilisateur_fkey` FOREIGN KEY (`id_utilisateur`) REFERENCES `Utilisateur`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Temoignage` ADD CONSTRAINT `Temoignage_id_utilisateur_fkey` FOREIGN KEY (`id_utilisateur`) REFERENCES `Utilisateur`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Session` ADD CONSTRAINT `Session_id_utilisateur_fkey` FOREIGN KEY (`id_utilisateur`) REFERENCES `Utilisateur`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;

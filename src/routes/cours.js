@@ -15,7 +15,7 @@ export const coursRoute = Router();
 coursRoute.get("/", clientCours);
 coursRoute.get("/coursEnseignatId/:id", coursEnseignatId);
 coursRoute.get("/detail/:id", datailCours);
-coursRoute.post("/create", createCours);
+// coursRoute.post("/create", createCours);
 coursRoute.put(
   "/update/:id",
   // [authMiddleware, enseignantMiddleware],

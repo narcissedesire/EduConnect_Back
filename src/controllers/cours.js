@@ -1,4 +1,24 @@
+import multer from "multer";
 import { prismaClient } from "../../prisma/prismaClient.js";
+import path from "path";
+import fs from "fs";
+
+const uploadPath = path.resolve("public", "ImagesCours");
+
+if (!fs.existsSync(uploadPath)) {
+  fs.mkdirSync(uploadPath, { recursive: true });
+}
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadPath);
+  },
+  filename: (req, file, cb) => {
+    cb(null, `${Date.now()}-${file.originalname}`);
+  },
+});
+
+export const uploadPhotoCours = multer({ storage });
 
 export const clientCours = async (req, res) => {
   try {
@@ -15,6 +35,7 @@ export const clientCours = async (req, res) => {
         modules: true,
         niveau: true,
         categorie: true,
+        photo: true,
       },
       // orderBy: {
       //   createdAt: "desc",
@@ -49,6 +70,7 @@ export const coursEnseignatId = async (req, res) => {
           include: {
             categorie: true,
             modules: true,
+            photo: true,
           },
         },
       },
@@ -102,6 +124,7 @@ export const datailCours = async (req, res) => {
         },
         niveau: true,
         categorie: true,
+        photo: true,
         avis: {
           include: {
             utilisateur: true,
@@ -141,17 +164,32 @@ export const datailCours = async (req, res) => {
 
 export const createCours = async (req, res) => {
   try {
-    console.log("Requête reçue : ", req.body);
+    console.log(req.file);
+    console.log(req.body);
+    if (!req.file) {
+      return res.status(400).json({ message: "Aucun fichier téléchargé." });
+    }
     const { titre, description, categorieId, id_utilisateur } = req.body;
+    const photo = req.file.filename;
 
     if (!id_utilisateur) {
       res.status(404).json({ message: "L'ID de l'utilisateur est requis" });
     }
 
+    const createPhoto = await prismaClient.photo.create({
+      data: {
+        nom: photo,
+      },
+    });
+
     const enseignant = await prismaClient.enseignant.findFirst({
       where: { id_utilisateur },
     });
-    console.log(enseignant.id);
+    if (enseignant) {
+      console.log(enseignant.id);
+    } else {
+      console.log("pas enseignat");
+    }
 
     const cours = await prismaClient.cours.create({
       data: {
@@ -159,6 +197,7 @@ export const createCours = async (req, res) => {
         description,
         id_enseignant: enseignant.id,
         id_categorie: categorieId,
+        id_photo: createPhoto.id,
       },
     });
 
@@ -169,6 +208,7 @@ export const createCours = async (req, res) => {
       status: "success",
     });
   } catch (error) {
+    console.log(error);
     res.status(500).json({ message: error.message });
   }
 };

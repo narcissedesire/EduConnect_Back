@@ -7,30 +7,36 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import { createFichier, uploadFichier } from "./controllers/fichierPDF.js";
 import { createVideos, uploadVideo } from "./controllers/video.js";
+import { createCours, uploadPhotoCours } from "./controllers/cours.js";
+import path from "path";
 
 dotenv.config();
 
 const app = express();
 const server = createServer(app);
+const origin = "http://localhost:3000";
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173",
+    origin: origin,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   },
 });
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: origin,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type"],
   })
 );
 
+app.use(express.static(path.resolve("./public")));
+
 app.use(express.urlencoded({ extended: true }));
 
 app.post("/createFichier", uploadFichier.single("file"), createFichier);
 app.post("/createVideo", uploadVideo.single("file"), createVideos);
+app.post("/createPhoto", uploadPhotoCours.single("file"), createCours);
 
 app.use(express.json());
 

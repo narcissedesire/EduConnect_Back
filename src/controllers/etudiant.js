@@ -12,25 +12,43 @@ export const readEudiantEnseignantId = async (req, res) => {
   const { id } = req.params;
 
   try {
+    const enseignant = await prismaClient.enseignant.findFirst({
+      where: { id_utilisateur: id },
+    });
     const etudiants = await prismaClient.etudiant.findMany({
+      // where: {
+      //   inscriptions: {
+      //     some: {
+      //       cours: {
+      //         id_enseignant: enseignant.id, // Filtrer par l'ID de l'enseignant
+      //       },
+      //     },
+      //   },
+      // },
+      // include: {
+      // inscriptions: {
       where: {
         inscriptions: {
           some: {
             cours: {
-              id_enseignant: id, // Filtrer par l'ID de l'enseignant
+              id_enseignant: enseignant.id, // Filtrer par l'ID de l'enseignant
+            },
+          },
+          include: {
+            cours: true, // Inclure les détails des cours
+            etudiant: {
+              include: {
+                utilisateur: true,
+              },
             },
           },
         },
       },
-      include: {
-        utilisateur: true, // Inclure les détails de l'utilisateur
-        inscriptions: {
-          include: {
-            cours: true, // Inclure les détails des cours
-          },
-        },
-      },
+
+      // },
+      // },
     });
+    console.log(etudiants);
 
     res.status(200).json({
       status: "success",
