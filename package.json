@@ -5,8 +5,12 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
+    "build": "prisma generate && prisma migrate deploy",
     "start": "node src/index.js",
     "dev": "nodemon src/index.js"
+  },
+  "engines": {
+    "node": "22.12.0"
   },
   "keywords": [],
   "author": "",
