@@ -1,4 +1,4 @@
-import { hash } from "bcrypt";
+import bcrypt from "bcryptjs";
 import { prismaClient } from "../../prisma/prismaClient.js";
 import jwt from "jsonwebtoken";
 import { dataRegister, dataLogin } from "../utils/validation.js";
@@ -22,7 +22,7 @@ export const register = async (req, res) => {
       throw Error("Utilisateur déjà existant");
     }
 
-    const hashedPassword = await hash(mot_passe, 10);
+    const hashedPassword = await bcrypt.hash(mot_passe, 10);
 
     user = await prismaClient.utilisateur.create({
       data: {
@@ -59,7 +59,7 @@ export const login = async (req, res) => {
       throw Error("Utilisateur inexistant");
     }
 
-    const isPasswordValid = await hash(mot_passe, user.mot_passe);
+    const isPasswordValid = await bcrypt.compare(mot_passe, user.mot_passe);
     if (!isPasswordValid) {
       throw Error("Mot de passe incorrect");
     }

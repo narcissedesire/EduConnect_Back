@@ -70,6 +70,7 @@ export const createModule = async (req, res) => {
 };
 
 export const updateModule = async (req, res) => {
+  console.log(req.body);
   const { nom, description } = req.body;
   const { id } = req.params;
   try {
