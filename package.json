@@ -5,9 +5,9 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "build": "prisma generate && prisma migrate deploy",
-    "start": "prisma generate && node src/index.js",
-    "dev": "prisma generate && nodemon src/index.js"
+    "build": "prisma generate --schema=src/prisma/schema.prisma  && prisma migrate deploy --schema=src/prisma/schema.prisma",
+    "start": "prisma generate --schema=src/prisma/schema.prisma && node src/index.js",
+    "dev": "prisma generate --schema=src/prisma/schema.prisma && nodemon src/index.js"
   },
   "keywords": [],
   "author": "",
