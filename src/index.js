@@ -15,19 +15,19 @@ dotenv.config();
 const app = express();
 const server = createServer(app);
 const origin = "https://edu-connect-front.vercel.app";
-// const origin = "http://localhost:3000";
+const origin1 = "http://localhost:3000";
 const io = new Server(server, {
   cors: {
-    origin: origin,
+    origin: [origin, origin1],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   },
 });
 
 app.use(
   cors({
-    origin: origin,
+    origin: [origin, origin1],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
