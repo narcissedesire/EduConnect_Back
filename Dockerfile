@@ -13,12 +13,11 @@ RUN npm install
 # Étape 5 : Copier tout le contenu de votre projet dans le conteneur
 COPY . .
 
-# Étape 6 : Synchroniser Prisma avec la base existante
+# Étape 6 : Générer le client Prisma
 RUN npx prisma generate
-RUN npx prisma db pull  # Génère le schema.prisma basé sur la base existante
 
 # Étape 7 : Exposer le port de votre application
 EXPOSE 5000
 
 # Étape 8 : Définir la commande pour démarrer l'application
-CMD ["npm", "run", "dev"]
+CMD ["npm", "start"]
