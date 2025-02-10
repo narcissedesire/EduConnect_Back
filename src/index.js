@@ -14,7 +14,7 @@ dotenv.config();
 
 const app = express();
 const server = createServer(app);
-const origin = "https://edu-connect-front.vercel.app";
+const origin = "https://educonnect-front.onrender.com";
 const origin1 = "http://localhost:3000";
 const io = new Server(server, {
   cors: {
