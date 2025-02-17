@@ -14,11 +14,12 @@ dotenv.config();
 
 const app = express();
 const server = createServer(app);
-const origin = "https://educonnect-front.onrender.com";
-const origin1 = "http://localhost:3000";
+// const origin = "https://educonnect-front.onrender.com";
+const origin = "https://educonnect-front.pages.dev";
+// const origin1 = "http://localhost:3000";
 const io = new Server(server, {
   cors: {
-    origin: [origin, origin1],
+    origin: [origin],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   },
 });
