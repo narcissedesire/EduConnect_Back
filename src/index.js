@@ -26,7 +26,7 @@ const io = new Server(server, {
 
 app.use(
   cors({
-    origin: [origin, origin1],
+    origin: [origin],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
