@@ -15,18 +15,21 @@ dotenv.config();
 const app = express();
 const server = createServer(app);
 // const origin = "https://educonnect-front.onrender.com";
-const origin = "https://educonnect-front.pages.dev";
+const origin = [
+  "https://educonnect-front.pages.dev",
+  "http://localhost:3000", 
+];
 // const origin1 = "http://localhost:3000";
 const io = new Server(server, {
   cors: {
-    origin: [origin],
+    origin,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   },
 });
 
 app.use(
   cors({
-    origin: [origin],
+    origin,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
@@ -72,7 +75,6 @@ io.on("connection", (socket) => {
     io.emit("getUsers", users);
   });
 
-  // Envoyer et recevoir des messages
   socket.on("sendMessage", ({ id_sender, id_conversation, text }) => {
     const recipient = getUser(id_conversation);
     if (recipient) {
@@ -84,7 +86,6 @@ io.on("connection", (socket) => {
     }
   });
 
-  // Gérer la déconnexion
   socket.on("disconnect", () => {
     console.log(`User disconnected: ${socket.id}`);
     removeUser(socket.id);
